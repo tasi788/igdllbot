@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "igdllbot"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyyaml = "^6.0.2"
+pydantic = "^2.9.2"
+pyrogram = {git = "https://github.com/KurimuzonAkuma/pyrogram.git"}
+coloredlogs = "^15.0.1"
+tgcrypto = "^1.2.5"
+instaloader = "^4.13.1"
+python-ffmpeg = "^2.0.12"
+httpx = "^0.27.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

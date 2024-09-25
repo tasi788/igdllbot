@@ -4,3 +4,5 @@
 env_config.yml
 
 .idea/
+
+__pycache__/
