@@ -10,6 +10,7 @@ from ffmpeg.asyncio import FFmpeg
 from io import BytesIO
 import httpx
 import time
+from html import escape
 
 logger = watchlog(__name__)
 insta = instaloader.Instaloader()
@@ -39,9 +40,18 @@ async def transcode_video(video_url):
     # ffmpeg.output(input_file, output_file).run_async()
     # return output_file
 
+def chunk_list(lst, chunk_size):
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i:i + chunk_size]
+
+def clean_url(url: str) -> str:
+    return re.sub(r'\?igsh=.*$', '', url)
+
+
 @Bot.on_message(filters.regex(r'https://www.instagram.com/.*'))
 async def get_url(_, message: Message):
     url = message.text
+    cleaned_url = clean_url(url)
     pattern = r"https://www\.instagram\.com/(?:stories/[\w-]+|reel|p|[\w-]+/p)/([\w-]+)/?"
     try:
         shortcode = re.search(pattern, url).group(1)
@@ -57,6 +67,7 @@ async def get_url(_, message: Message):
 
     send = await message.reply_text('正在下載貼文，請稍後。')
 
+    caption = '<a href="{url}">{author}</a>'.format(author=post.owner_username, url=cleaned_url)
     if post.mediacount > 1:
         await message.reply_chat_action(ChatAction.UPLOAD_VIDEO)
         media_list = []
@@ -65,8 +76,13 @@ async def get_url(_, message: Message):
                 media_list.append(InputMediaVideo(img.video_url))
             else:
                 media_list.append(InputMediaPhoto(img.display_url))
-        media_list[0].caption = f'{post.caption}'
-        await message.reply_media_group(media_list)
+
+        if len(media_list) > 10:
+            chunks = list(chunk_list(media_list, 10))
+            for i, chunk in enumerate(chunks):
+                if i == 0:
+                    chunk[0].caption = caption
+                await message.reply_media_group(chunk)
     else:
         await message.reply_chat_action(ChatAction.UPLOAD_PHOTO)
         if post.is_video:
